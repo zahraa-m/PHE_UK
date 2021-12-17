@@ -1,74 +1,54 @@
-import pandas as pd
-df_2020= pd.read_csv('https://raw.githubusercontent.com/zahraa-m/PHE_UK/main/EPD_202004.csv')
-df_2021= pd.read_csv('https://raw.githubusercontent.com/zahraa-m/PHE_UK/main/EPD_202104.csv')
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "Added_NIC.ipynb",
+      "provenance": [],
+      "collapsed_sections": [],
+      "authorship_tag": "ABX9TyPxjPeIv4iiIi/AJnpLE9+u",
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/zahraa-m/PHE_UK/blob/main/PHE_UK.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "PMvN-yot50pA"
+      },
+      "source": [
+        "# In the code below, I prepared the data to:\n",
+        "### This is a .\n"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [
+                  #calculate NIC in each area in the Greater Manchester
+                  NIC_2020 = pd.crosstab(index=df_2020['NIC'], columns=df_2020['area_co'], margin=True).fillna(0).astype(int)
+                  NIC_2021 = pd.crosstab(index=df_2021['NIC'], columns=df_2021['area_co'], margin=True).fillna(0).astype(int)
 
-df_2020['area_co'] = df_2020['POSTCODE'].str[0:3]
-df_2021['area_co'] = df_2021['POSTCODE'].str[0:3]
-
-#calculate total quantity per medicine in each area in the Greater Manchester
-TQ_per_med_2020 = pd.crosstab(index=df_2020['CHEMICAL_SUBSTANCE_BNF_DESCR'], columns=df_2020['area_co'], values=df_2020['TOTAL_QUANTITY'], aggfunc='sum', margins=True).fillna(0).astype(int)
-TQ_per_med_2021 = pd.crosstab(index=df_2021['CHEMICAL_SUBSTANCE_BNF_DESCR'], columns=df_2021['area_co'], values=df_2021['TOTAL_QUANTITY'], aggfunc='sum', margins=True).fillna(0).astype(int)
-
-TQ_per_med_2020.to_csv("TQ_2020.csv")
-TQ_per_med_2021.to_csv("TQ_2021.csv")
-
-#calculate Cost per medicine in each area in the Greater Manchester
-cost_per_med_2020 = pd.crosstab(index=df_2020['CHEMICAL_SUBSTANCE_BNF_DESCR'], columns=df_2020['area_co'], values=df_2020['ACTUAL_COST'], aggfunc='sum', margins=True).fillna(0).astype(int)
-cost_per_med_2021 = pd.crosstab(index=df_2021['CHEMICAL_SUBSTANCE_BNF_DESCR'], columns=df_2021['area_co'], values=df_2021['ACTUAL_COST'], aggfunc='sum', margins=True).fillna(0).astype(int)
-
-#calculate NIC in each area in the Greater Manchester
-NIC_2020 = pd.crosstab(index=df_2020['NIC'], columns=df_2020['area_co'], margin=True).fillna(0).astype(int)
-NIC_2021 = pd.crosstab(index=df_2021['NIC'], columns=df_2021['area_co'], margin=True).fillna(0).astype(int)
-
-#Delete the "All" row in the table
-TQ_per_med_2020 = TQ_per_med_2020.drop(["All"], axis=0)
-TQ_per_med_2021 = TQ_per_med_2021.drop(["All"], axis=0)
-
-cost_per_med_2020 = cost_per_med_2020.drop(["All"], axis=0)
-cost_per_med_2021 = cost_per_med_2021.drop(["All"], axis=0)
-
-#Rename the All column to TQ_2020 and TQ_2021
-TQ_per_med_2020 = TQ_per_med_2020.rename(columns={"All": "TQ_2020"})
-TQ_per_med_2021 = TQ_per_med_2021.rename(columns={"All": "TQ_2021"})
-
-cost_per_med_2020 = cost_per_med_2020.rename(columns={"All": "cost_2020"})
-cost_per_med_2021 = cost_per_med_2021.rename(columns={"All": "cost_2021"})
-
-#filter the tables to include only medicine's name and total quantity
-df1 = TQ_per_med_2020.filter(['CHEMICAL_SUBSTANCE_BNF_DESCR', 'TQ_2020'])
-df2 = TQ_per_med_2021.filter(['CHEMICAL_SUBSTANCE_BNF_DESCR', 'TQ_2021'])
-
-#filter the tables to include only medicine's name and Cost
-df3 = cost_per_med_2020.filter(['CHEMICAL_SUBSTANCE_BNF_DESCR', 'cost_2020'])
-df4 = cost_per_med_2021.filter(['CHEMICAL_SUBSTANCE_BNF_DESCR', 'cost_2021'])
 
 #filter the tables to include only medicine's name and NIC
 df5 = NIC_2020.filter(['CHEMICAL_SUBSTANCE_BNF_DESCR', 'NIC_2020'])
 df6 = NIC_2021.filter(['CHEMICAL_SUBSTANCE_BNF_DESCR', 'NIC_2021'])
-
-#find the difference between Total quantity of 2020 and 2021
-TQ_per_drug_allyear = pd.merge(df1, df2, how="outer", on=('CHEMICAL_SUBSTANCE_BNF_DESCR')).fillna(0).astype(int)
-diff_TQ = (df2['TQ_2021'] - df1['TQ_2020'] )
-TQ_per_drug_allyear['diff_TQ']=diff_TQ.fillna(0) 
-
-#find the percentage of the difference
-diff_TQ_pct = (diff_TQ / df1['TQ_2020']) * 100
-TQ_per_drug_allyear['diff_TQ_pct']=diff_TQ_pct.fillna(0)
-
-#Filter zero differance in total quantity
-TQ_per_drug_allyear= TQ_per_drug_allyear.query("diff_TQ>0")
-
-#find the difference between cost of medicine in 2020 and 2021
-cost_per_drug_allyear = pd.merge(df3, df4, how="outer", on=('CHEMICAL_SUBSTANCE_BNF_DESCR')).fillna(0).astype(int)
-diff_cost = (df4['cost_2021'] - df3['cost_2020'])
-cost_per_drug_allyear['diff_cost']= diff_cost.fillna(0)
-
-#find the percentage of the difference
-diff_cost_pct = (diff_cost / df3['cost_2020']) * 100
-cost_per_drug_allyear['diff_cost_pct']= diff_cost_pct.fillna(0)
-
-#Filter zero differance in cost
-cost_per_drug_allyear=cost_per_drug_allyear.query("diff_cost>0")
 
 #find the difference between NIC in 2020 and 2021
 NIC_allyear = pd.merge(df5, df6, how="outer", on=('CHEMICAL_SUBSTANCE_BNF_DESCR')).fillna(0).astype(int)
@@ -81,37 +61,6 @@ NIC_allyear['diff_NIC_pct']= diff_NIC_pct.fillna(0)
 
 #Filter zero differance in cost
 NIC_allyear=NIC_allyear.query("diff_NIC>0")
-
-#plot the difference between Total quantity of medicine in 2021 and 2020
-import plotly.express as px
-fig_TQ = px.line(TQ_per_drug_allyear, x=TQ_per_drug_allyear.index, y='diff_TQ',
-                  labels={
-                     "x": "Medicines",
-                     "diff_TQ": "Total Quantity difference"},
-                 title='Total Quantity difference between 2021 & 2020')fig_TQ.show()
-#plot the percentage of difference between Total quantity of medicine in 2021 and 2020
-fig_TQ_pct = px.line(TQ_per_drug_allyear, x=TQ_per_drug_allyear.index, y='diff_TQ_pct',
-                  labels={
-                     "x": "Medicines",
-                     "diff_TQ_pct": "Total Quantity Increase %"},
-                 title='Percentage increase of Total Quantity difference between 2021 & 2020')
-fig_TQ_pct.update_traces(line_color='#F54730')
-fig_TQ_pct.show()
-
-#plot the cost difference between the medicine of 2021 and 2020
-fig_cost = px.line(cost_per_drug_allyear, x=cost_per_drug_allyear.index, y='diff_cost',
-                    labels={
-                       "x": "Medicines",
-                       "diff_cost": "Cost difference"},
-                   title='Cost difference between 2021 & 2020')fig_cost.show()
-#plot the percentage of cost difference between the medicine of 2021 and 2020
-fig_cost_pct = px.line(cost_per_drug_allyear, x=cost_per_drug_allyear.index, y='diff_cost_pct',
-                  labels={
-                     "x": "Medicines",
-                     "diff_cost_pct": "Cost Increase %"},
-                 title='Percentage increase of Cost difference between 2021 & 2020')
-fig_cost_pct.update_traces(line_color='#F54730')
-fig_cost_pct.show()
 
 #plot the NIC difference the medicine of between 2021 and 2020
 fig_NIC = px.line(NIC_allyear, x=NIC_allyear.index, y='diff_NIC',
